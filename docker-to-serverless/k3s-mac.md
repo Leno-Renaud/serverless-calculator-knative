@@ -20,3 +20,11 @@ finalement pour percer le tunnel réseau
 kubectl port-forward service/calc-service 8080:80
 ```
 on peut accéder via http://localhost:8080
+Finalement, pour arrêter et remettre le contexte sur docker-destop proprement, (gardant en mémoire on peut juste start, faire le port forward)
+```bash
+colima stop/start
+```
+et pour  supprimer proprement
+```bash
+colima delete
+```
