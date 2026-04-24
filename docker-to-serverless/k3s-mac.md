@@ -15,7 +15,7 @@ vérifie que les pods se lancent bien:
 ```bash
 kubectl get pods
 ```
-finalement pour percer le tunnel réseau
+Contrairement à Linux où le routage est natif, macOS encapsule Kubernetes dans une machine virtuelle strictement isolée, rendant l'utilisation de port-forward indispensable pour créer un tunnel réseau vers l'application.
 ```bash
 kubectl port-forward service/calc-service 8080:80
 ```
