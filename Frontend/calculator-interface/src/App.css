@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+*{
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	font-family: 'Outfit', sans-serif;
+}
+
+.app{
+	width: 100vw;
+	height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: #f4f7ff;
+}
+
+.calculator{
+	padding: 25px;
+	height: 545px;
+	width: 550px;
+	background-color: #ffffff;
+	position: relative;
+	border-radius: 20px;
+	border: 2px solid #d7e0ff;
+	box-shadow: 0 12px 30px rgba(44, 63, 117, 0.12);
+}
+
+#resultZone{
+	width: 500px;
+	height: 50px;
+	margin-top: 20px;
+	font-size: 1.5em;
+	padding: 10px;
+	border: 2px solid #c4d0ff;
+	border-radius: 12px;
+	background-color: #edf2ff;
+	color: #1e2a55;
+	outline: none;
+}
+
+#resultZone::placeholder{
+	color: #6b7bb5;
+}
+
+.keysWrapper{
+	display: flex;
+	justify-content: space-between;
+}
+
+.numberKeys{
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-around;
+	margin-top: 20px;
+	height: 400px;
+	width: 300px;
+}
+
+.operationKeys{
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-around;
+	margin-top: 20px;
+	height: 300px;
+	width: 200px;
+}
+
+.operationKeys .key{
+	background-color: #ffd84d;
+	color: #5a4200;
+	border-color: #ffd84d;
+}

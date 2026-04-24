@@ -1,0 +1,12 @@
+.resultKey{
+    width: 180px;
+    height:75px;
+    margin: 10px;
+    font-size: 20px;
+    cursor: pointer;
+    border: 2px solid #22c55e;
+    border-radius: 14px;
+    background-color: #22c55e;
+    color: #ffffff;
+    font-weight: 700;
+}

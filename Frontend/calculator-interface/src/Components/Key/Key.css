@@ -1,0 +1,12 @@
+.key{
+    width: 75px;
+    height:75px;
+    margin: 10px;
+    font-size: 20px;
+    cursor: pointer;
+    border: 2px solid #56c5ff;
+    border-radius: 14px;
+    background-color: #56c5ff;
+    color: #07314f;
+    font-weight: 600;
+}
