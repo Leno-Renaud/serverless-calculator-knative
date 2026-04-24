@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: web
-        image: localhost/calculatest:latest
+        image: localhost/calculator:latest
         imagePullPolicy: Never
         ports:
         - containerPort: 80

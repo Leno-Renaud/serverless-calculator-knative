@@ -1,0 +1,50 @@
+### Primo : Avoir un dockerfile + un code dans un dossier.
+Sur le github, dans `Frontend/calculator-interface/`
+
+Dans ce dossier, depuis une iso k3s, exécuter :
+```bash
+podman build . -t <nom-image>
+```
+Ceci crée une image docker qui va servir à créer nos conteneurs.
+
+
+### Secundo :
+(optionnel: pour créer un conteneur, il suffit de faire :
+```bash
+podman run --rm -p 8080:80 --name <nom-conteneur> <nom-image>
+```
+Votre conteneur est accesible sur un navigateur via http://localhost:8080 !)
+
+
+### Pour kubernetes, c'est un peu plus compliqué. 
+*(je recommande de tout faire en étant root, c'est plus simple)*
+
+Avant toute chose, démarrez le programme shell du serveur avec `./startk3sServer.sh`. Ce programme se trouve dans l'iso k3s dispo sur tc-net, dans le dossier `home/user`.
+
+Une fois le serveur lancé, il faut un descripteur, normalement fourni avec ce txt (nommé `kdescriptor.yaml`)  
+Il sert à expliquer à kubernetes la configuration voulue pour nos conteneurs. 
+
+Dans ce descripteur, il y a un champ `Deployment` qui représente un déploiement de conteneurs, avec X conteneurs (champ `replicas`) et un champ `image` à remplir avec le nom de votre image. Vous pouvez l'obtenir avec la commande : `podman images`
+
+Une fois ceci fait, il vous faudra (probablement) importer l'image dans k3s avec la commande :
+```bash
+podman save <nom-image> | sudo k3s ctr images import -
+```
+
+Ensuite, il faut entrer la commande :
+```bash
+kubectl apply -f <nom-descripteur.yaml>
+```
+
+Normalement, à ce stade, votre cluster tourne et fonctionne.  
+Pour le vérifier, la commande :
+```bash
+kubectl get pods 
+```
+est utile. Si tous vos pods sont dans l'état Running, tout fonctionne ! 
+
+Retrouvez votre programme sur http://localhost:<NodePort> (par défaut 30080)
+
+---
+**Bravo ! C'est finito pipo tête sous l'eau**  
+*Pour knative, ça arrive fort restez connectés*

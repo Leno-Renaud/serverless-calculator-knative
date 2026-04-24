@@ -34,7 +34,7 @@ CMD ["nginx", "-g", "daemon off;"]
 #le flag -d pour détacher le conteneur et le faire tourner en arrière-plan
 #-p pour faire le mapping du port 80 du conteneur vers le port 8080 de la machine hôte, 
 #--name pour donner un nom au conteneur, ici "calc-app", et nom image à utiliser, ici "calculatrice"
-#docker run -d -p 8080:80 --name calc-app ma-calculatrice
+#docker run -d -p 8080:80 --name calc-app calculatrice
 
 #pour le stopper/start
 #docker stop/start calc-app
