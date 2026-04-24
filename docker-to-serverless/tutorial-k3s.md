@@ -43,7 +43,7 @@ kubectl get pods
 ```
 est utile. Si tous vos pods sont dans l'état Running, tout fonctionne ! 
 
-Retrouvez votre programme sur http://localhost:<NodePort> (par défaut 30080)
+Retrouvez votre programme sur `http://localhost:<NodePort>` (par défaut 30080)
 
 ---
 **Bravo ! C'est finito pipo tête sous l'eau**  
