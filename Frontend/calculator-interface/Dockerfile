@@ -1,6 +1,6 @@
 #charge un environnement node leger React en fichiers web classiques
 #nomme cette étape "build" pour y faire référence plus tard.
-FROM node:20-alpine AS build
+FROM docker.io/library/node:20-alpine AS build
 
 #Crée un dossier /app à l'intérieur du conteneur et s'y déplace
 WORKDIR /app
@@ -18,9 +18,10 @@ RUN npm run build
 
 #étape 2 : Serveur web Nginx
 #démarre une toute nouvelle image, vierge, contenant uniquement le serveur web Nginx.
-FROM nginx:alpine
-#va chercher dossier dist de 1e étape, et le met dans le dossier ou Nginx sert les fichiers web.
-#cherche /dist dans environnmenet build, dépose dans le serveur Nginx.
+#Nginx intercepte la demande, va chercher ces fichiers, et les envoie au navigateur de l'utilisateur.
+FROM docker.io/library/nginx:alpine
+
+#cherche /dist dans environnmenet build, dépose dans le dossier où Nginx sert les fichiers web.
 COPY --from=build /app/dist /usr/share/nginx/html
 #conteneur veut écouter port 80 (HTTP)
 EXPOSE 80
