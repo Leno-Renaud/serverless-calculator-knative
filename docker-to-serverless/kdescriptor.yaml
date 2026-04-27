@@ -1,13 +1,20 @@
+#lit deployment, demande à kubernetes d'ouvrir/maintenir nombre de pods (conteneurs). Quand on envoie requête au nodePort, kubernetes redirige vers un des pods dispo.
+
+
 # Simple application with service
 apiVersion: apps/v1
+#deployment: assure le bon nombre de pods tourne en permanence
 kind: Deployment
 metadata:
   name: calculator-app
 spec:
+  #replicas: nombre de pods
   replicas: 3
+  #méthode de sélection des pods à gérer, label calc
   selector:
     matchLabels:
       app: calc
+  #template: modèle de pod à créer
   template:
     metadata:
       labels:
@@ -15,21 +22,29 @@ spec:
     spec:
       containers:
       - name: web
+        #image docker à utiliser
         image: calculatrice:latest
+        #local, interdit de pull l'image depuis internet
         imagePullPolicy: Never
         ports:
+        #port où le processus à l'intérieur du conteneur écoute
         - containerPort: 80
 
 ---
 apiVersion: v1
+#service: point d'entrée pour accéder à l'application, répartiteur de charge
 kind: Service
 metadata:
   name: calc-service
 spec:
+  #router le trafic vers les pods avec le label calc
   selector:
     app: calc
   ports:
+  #port du service dans le cluster
   - port: 80
+  #port utilisé dans les pods (défini dans deployment)
     targetPort: 80
+    #port sur lequel le service est exposé à l'extérieur du cluster
     nodePort: 30080
   type: NodePort
