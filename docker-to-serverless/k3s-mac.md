@@ -1,3 +1,19 @@
+# Construire image docker
+```bash
+docker build . -t <nom-image>
+```
+Ceci crée une image docker qui va servir à créer nos conteneurs.
+
+
+### Secundo :
+(optionnel: pour créer un conteneur, il suffit de faire :
+```bash
+docker run -d -p 8080:80 --name <nom-conteneur> <nom-image>
+#pour le stopper/start
+docker stop/start calc-app
+```
+)
+# Cluster
 Lancer colima avec kubernetes
 ```bash
 colima start --kubernetes

@@ -1,0 +1,13 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: calc-serverless
+spec:
+  template:
+    spec:
+      containers:
+        # Mettre nom de l'image docker à utiliser
+        - image: docker.io/lenorenaud/calculatrice:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
