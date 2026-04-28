@@ -45,6 +45,7 @@ kubectl get pods -n knative-serving
 *Le cluster est prêt lorsque `activator`, `autoscaler`, `controller`, et `webhook` sont tous à l'état `Running`.*
 
 ### D. Construire le conteneur
+Dans le dossier avec la dockerfile
 ```bash
 docker login
 docker build -t docker.io/TON_USER_DOCKERHUB/calculatrice:1.0 .
@@ -80,6 +81,7 @@ spec:
 Puis déployez :
 ```bash
 kubectl apply -f knative.yaml
+#si jamais complete_control, apply config-autoscaler et knative.yaml
 ```
 vérifier:
 ```bash
@@ -99,7 +101,7 @@ Ajoute-la au `config-domain` de Knative :
 kubectl patch configmap config-domain -n knative-serving --type merge -p '{"data":{"<NOUVELLE_IP>.sslip.io":""}}'
 ```
 
-5) Exposer Kourier
+5) Exposer Kourier (macos uniquement)
 
 Le plus simple chez moi est de faire un `port-forward` sur un port libre, par exemple `8080`.
 
