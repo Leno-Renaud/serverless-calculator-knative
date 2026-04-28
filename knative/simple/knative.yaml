@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
         # Mettre nom de l'image docker à utiliser
-        - image: docker.io/lenorenaud/calculatrice:1.0
-          imagePullPolicy: Never
+        - image: docker.io/lenorenaud/calculator-interface:1.0
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
