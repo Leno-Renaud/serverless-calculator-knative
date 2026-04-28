@@ -1,0 +1,35 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: calc-serverless
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/class: kpa.autoscaling.knative.dev
+        autoscaling.knative.dev/metric: concurrency
+        autoscaling.knative.dev/target: "10"
+        autoscaling.knative.dev/target-utilization-percentage: "70"
+        autoscaling.knative.dev/min-scale: "1"
+        autoscaling.knative.dev/max-scale: "5"
+        autoscaling.knative.dev/initial-scale: "1"
+        autoscaling.knative.dev/activation-scale: "2"
+        autoscaling.knative.dev/scale-down-delay: "0s"
+        autoscaling.knative.dev/panic-window-percentage: "10"
+        autoscaling.knative.dev/panic-threshold-percentage: "200"
+        autoscaling.knative.dev/target-burst-capacity: "200"
+    spec:
+      containerConcurrency: 10
+      timeoutSeconds: 300
+      containers:
+        - image: docker.io/lenorenaud/calculatrice:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
