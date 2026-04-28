@@ -181,8 +181,9 @@ function toEML(ast) {
   return compile(ast);
 }
 
-function runPython(eml) {
-  const emlJson = JSON.stringify(eml);
+// Point d'extension : aujourd'hui subprocess local, demain appel HTTP vers pods Kubernetes.
+async function runEmlWorker(emlTree) {
+  const emlJson = JSON.stringify(emlTree);
   const pythonCandidates = ['python3', 'python'];
   let lastError = null;
 
@@ -224,7 +225,7 @@ function runPython(eml) {
     let parsed;
     try {
       parsed = JSON.parse(out);
-    } catch (e) {
+    } catch {
       throw createError('JSON invalide reçu de Python');
     }
 
@@ -243,10 +244,10 @@ function runPython(eml) {
   throw createError(`Impossible d'exécuter Python: ${errMsg}`);
 }
 
-function calculateExpression(expression) {
+async function calculateExpression(expression) {
   const ast = parseExpression(expression);
   const emlTree = toEML(ast);
-  return runPython(emlTree);
+  return runEmlWorker(emlTree);
 }
 
 module.exports = {

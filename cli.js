@@ -7,10 +7,9 @@ if (!expression) {
   process.exit(1);
 }
 
-try {
-  const result = calculateExpression(expression);
-  console.log(result);
-} catch (error) {
-  console.error(error.message || 'Erreur de calcul');
-  process.exit(1);
-}
+calculateExpression(expression)
+  .then(result => console.log(result))
+  .catch(error => {
+    console.error(error.message || 'Erreur de calcul');
+    process.exit(1);
+  });

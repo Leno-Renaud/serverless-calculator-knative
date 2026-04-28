@@ -1,24 +1,44 @@
 # Backend calculator
 
-Backend Node.js pour parser une expression reçue en HTTP, construire un AST, le compiler en arbre EML, et déléguer l'évaluation à Python.
-
-Pipeline unique: **expression → AST → arbre EML → Python → résultat**
+Backend Node.js orchestrateur : reçoit une expression arithmétique, la convertit en arbre EML, et délègue l'évaluation à un worker Python.
 
 ## Architecture
 
+### MVP actuel (local)
+
 ```
-expression (string)
-    ↓ parser (mathjs)
-   AST
-    ↓ compilateur EML (JS)
-  arbre EML (JSON)
-    ↓ calculator.py (python3)
-  résultat (number)
+Frontend
+  → POST /calculate  { "expression": "4+3×(2.2+4)" }
+  → Backend Node (orchestrateur)
+      normalizeExpression()
+      parseExpression()    → AST
+      toEML()              → arbre EML
+      runEmlWorker()       → subprocess python3 calculator.py
+  → Worker Python local
+      eval_eml()           → résultat via cmath
+  → Backend → { "result": 22.6 }
+  → Frontend
 ```
 
-- Python est utilisé pour évaluer l'arbre EML (via `cmath.exp` / `cmath.log`)
-- EML est la représentation unique du calcul — aucune évaluation JS en parallèle
-- Backend prêt pour déploiement Docker/Kubernetes
+> Le worker Python est actuellement exécuté localement dans le même conteneur pour
+> valider le pipeline EML. Dans la version distribuée, ce worker sera exécuté dans
+> des pods Kubernetes/Knative, et le backend ne fera que l'orchestration via HTTP.
+
+### Architecture cible (Kubernetes / Knative)
+
+```
+Frontend
+  → Backend Node (orchestrateur)
+      runEmlWorker()  →  POST WORKER_URL/eml  { "eml": <arbre> }
+                     ←  { "result": 22.6 }
+  → Workers Python dans des pods Kubernetes / Knative
+  → Backend → Frontend
+```
+
+La fonction `runEmlWorker()` dans [calculator.js](calculator.js) est le seul point
+à modifier pour passer du mode local au mode distribué.
+
+---
 
 ## Installation locale
 
@@ -38,9 +58,8 @@ npm test
 ```bash
 node cli.js "2+3"
 node cli.js "4+3×(2.2+4)"
+# → 22.6
 ```
-
-Résultat attendu pour le second : `22.6`
 
 ## Docker
 
@@ -52,8 +71,6 @@ docker run -p 3000:3000 calculator-backend
 ## API
 
 `POST /calculate`
-
-Body JSON :
 
 ```json
 { "expression": "4+3×(2.2+4)" }
@@ -78,12 +95,6 @@ Exemple PowerShell :
 ```powershell
 $body = @{ expression = '4+3×(2.2+4)' } | ConvertTo-Json -Compress
 Invoke-RestMethod -Uri 'http://127.0.0.1:3000/calculate' -Method POST -ContentType 'application/json; charset=utf-8' -Body $body
-```
-
-Exemples d'erreur :
-
-```json
-{ "error": "Division par zéro" }
 ```
 
 ## Opérateurs supportés
