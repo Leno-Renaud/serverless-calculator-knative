@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify
-import json
 import cmath
 import os
 
@@ -30,19 +29,14 @@ def eval_eml(node):
         raise ValueError('Erreur de calcul EML')
 
 
-@app.get('/eml')
+@app.route('/eml', methods=['POST'])
 def calculate():
-    eml_str = request.args.get('eml')
-    if not eml_str:
+    data = request.get_json()
+    if not data or 'eml' not in data:
         return jsonify({'error': 'EML manquant'}), 400
 
     try:
-        eml = json.loads(eml_str)
-    except Exception:
-        return jsonify({'error': 'JSON EML invalide'}), 400
-
-    try:
-        value = eval_eml(eml)
+        value = eval_eml(data['eml'])
     except ZeroDivisionError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:

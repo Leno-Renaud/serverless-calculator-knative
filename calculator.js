@@ -182,13 +182,15 @@ function toEML(ast) {
   return compile(ast);
 }
 
-// Point d'extension : aujourd'hui GET local port 8000, demain pods Kubernetes.
+// Point d'extension : aujourd'hui POST local port 8000, demain pods Kubernetes.
 async function runEmlWorker(emlTree) {
-  const emlParam = encodeURIComponent(JSON.stringify(emlTree));
-
   let res;
   try {
-    res = await fetch(`${WORKER_URL}/eml?eml=${emlParam}`);
+    res = await fetch(`${WORKER_URL}/eml`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eml: emlTree }),
+    });
   } catch (err) {
     throw createError(`Worker inaccessible: ${err.message}`, 503);
   }
