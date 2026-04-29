@@ -38,6 +38,8 @@ Le descripteur spécifie aussi :
 - Variables d'environnement : `WORKER_URL` et `FLASK_PORT`
 
 ## Étape 4 : Déployer les manifests
+*(je recommande de tout faire en étant root, c'est plus simple)*
+Avant toute chose, démarrez le programme shell du serveur avec `./startk3sServer.sh`. Ce programme se trouve dans l'iso k3s dispo sur tc-net, dans le dossier `home/user`.
 
 ```bash
 kubectl apply -f docker-to-serverless/kdescriptor.yaml
