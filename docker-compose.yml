@@ -1,0 +1,27 @@
+services:
+  frontend:
+    build:
+      context: ./Frontend/calculator-interface
+      args:
+        VITE_API_URL: http://localhost:3000
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend/calc
+    environment:
+      WORKER_URL: http://worker:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - worker
+
+  worker:
+    build:
+      context: ./backend/worker
+      dockerfile: Dockerfile.worker
+    expose:
+      - "8000"

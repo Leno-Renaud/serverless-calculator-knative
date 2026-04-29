@@ -4,6 +4,9 @@ FROM docker.io/library/node:20-alpine AS build
 
 #Crée un dossier /app à l'intérieur du conteneur et s'y déplace
 WORKDIR /app
+#URL API injectée au build Vite
+ARG VITE_API_URL=http://localhost:3000
+ENV VITE_API_URL=$VITE_API_URL
 #Copie fichiers de configuration npm depuis Mac vers le dossier /app du conteneur.
 #si seul code react change, gain de temps en ne réinstallant pas les dépendances
 COPY package*.json ./

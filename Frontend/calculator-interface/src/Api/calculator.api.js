@@ -1,6 +1,8 @@
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
+
 export async function calculate(expression) {
     try{
-        const response = await fetch("http://localhost:3000/calculate", {
+        const response = await fetch(`${API_BASE_URL}/calculate`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
