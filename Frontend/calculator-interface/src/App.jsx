@@ -8,7 +8,7 @@ export default function App() {
   const [expression, setExpression] = useState("")
   const handleKeyPress = (value) => {
     if (value === "↩") {
-      setExpression((previous) => previous.slice(0, -1))
+      setExpression("")
       return
     }
     setExpression((previous) => previous + value)
@@ -18,7 +18,7 @@ export default function App() {
     console.log("Calculation result:", result)
   }
 
-  const numberKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "↩"]
+  const numberKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫"]
   const operationKeys = ["+", "-", "*", "/", "(", ")"]
 
   return (
