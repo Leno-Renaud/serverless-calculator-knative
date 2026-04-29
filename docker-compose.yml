@@ -22,6 +22,5 @@ services:
   worker:
     build:
       context: ./backend/worker
-      dockerfile: Dockerfile.worker
     expose:
       - "8000"
