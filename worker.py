@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify
-import cmath
 import os
 
 app = Flask(__name__)
@@ -13,20 +12,26 @@ def eval_eml(node):
     if node.get('isLeaf'):
         v = node.get('value')
         try:
-            return complex(float(v), 0.0)
+            return float(v)
         except Exception:
             raise ValueError('Valeur feuille invalide')
 
+    op = node.get('op')
     left = eval_eml(node.get('left'))
     right = eval_eml(node.get('right'))
 
-    if abs(right.real) < 1e-15 and abs(right.imag) < 1e-15:
-        raise ZeroDivisionError('Division par zéro')
+    if op == 'add':
+        return left + right
+    if op == 'sub':
+        return left - right
+    if op == 'mul':
+        return left * right
+    if op == 'div':
+        if abs(right) < 1e-15:
+            raise ZeroDivisionError('Division par zéro')
+        return left / right
 
-    try:
-        return cmath.exp(left) - cmath.log(right)
-    except Exception:
-        raise ValueError('Erreur de calcul EML')
+    raise ValueError('Opérateur non supporté')
 
 
 @app.route('/eml', methods=['POST'])
@@ -42,10 +47,7 @@ def calculate():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-    if abs(value.imag) >= 1e-10:
-        return jsonify({'error': 'Résultat complexe inattendu'}), 400
-
-    rounded = round(value.real, 12)
+    rounded = round(value, 12)
     if rounded == -0.0:
         rounded = 0.0
 

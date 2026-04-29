@@ -13,3 +13,4 @@ calculateExpression(expression)
     console.error(error.message || 'Erreur de calcul');
     process.exit(1);
   });
+  

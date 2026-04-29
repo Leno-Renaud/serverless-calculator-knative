@@ -1,21 +1,22 @@
 const { create, all } = require('mathjs');
 
 const math = create(all, {});
-
 const WORKER_URL = (process.env.WORKER_URL || 'http://localhost:8000').replace(/\/$/, '');
 
 class EMLNode {
-  constructor(left, right = null) {
+  constructor(left, right = null, op = null) {
     if (right === null) {
       this.isLeaf = true;
       this.value = left;
       this.left = null;
       this.right = null;
+      this.op = null;
       return;
     }
 
     this.isLeaf = false;
-    this.value = 'eml';
+    this.value = null;
+    this.op = op;
     this.left = left instanceof EMLNode ? left : new EMLNode(left);
     this.right = right instanceof EMLNode ? right : new EMLNode(right);
   }
@@ -34,6 +35,8 @@ function normalizeExpression(expression) {
 
   const normalized = expression
     .replace(/\s+/g, '')
+    .replace(/Ã—/g, '*')
+    .replace(/Ã·/g, '/')
     .replace(/×/g, '*')
     .replace(/÷/g, '/');
 
@@ -115,48 +118,6 @@ function validateAst(node) {
 }
 
 function toEML(ast) {
-  const one = new EMLNode(1);
-
-  function expNode(node) {
-    return new EMLNode(node, one);
-  }
-
-  function lnNode(node) {
-    return new EMLNode(one, new EMLNode(new EMLNode(one, node), one));
-  }
-
-  function eNode() {
-    return new EMLNode(one, one);
-  }
-
-  function eMinus(node) {
-    return new EMLNode(one, expNode(node));
-  }
-
-  function negNode(node) {
-    return new EMLNode(lnNode(eMinus(node)), expNode(eNode()));
-  }
-
-  function subNode(left, right) {
-    return new EMLNode(lnNode(left), expNode(right));
-  }
-
-  function addNode(left, right) {
-    return subNode(left, negNode(right));
-  }
-
-  function reciprocal(node) {
-    return expNode(negNode(lnNode(node)));
-  }
-
-  function mulNode(left, right) {
-    return expNode(addNode(lnNode(left), lnNode(right)));
-  }
-
-  function divNode(left, right) {
-    return mulNode(left, reciprocal(right));
-  }
-
   function compile(node) {
     if (node.type === 'number') {
       return new EMLNode(node.value);
@@ -167,13 +128,13 @@ function toEML(ast) {
 
     switch (node.op) {
       case '+':
-        return addNode(left, right);
+        return new EMLNode(left, right, 'add');
       case '-':
-        return subNode(left, right);
+        return new EMLNode(left, right, 'sub');
       case '*':
-        return mulNode(left, right);
+        return new EMLNode(left, right, 'mul');
       case '/':
-        return divNode(left, right);
+        return new EMLNode(left, right, 'div');
       default:
         throw createError('Opérateur non supporté');
     }
@@ -182,41 +143,41 @@ function toEML(ast) {
   return compile(ast);
 }
 
-// Point d'extension : aujourd'hui POST local port 8000, demain pods Kubernetes.
-async function runEmlWorker(emlTree) {
-  let res;
+async function runWorker(emlTree) {
+  let response;
+
   try {
-    res = await fetch(`${WORKER_URL}/eml`, {
+    response = await fetch(`${WORKER_URL}/eml`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ eml: emlTree }),
     });
-  } catch (err) {
-    throw createError(`Worker inaccessible: ${err.message}`, 503);
+  } catch (error) {
+    throw createError(`Worker inaccessible: ${error.message}`, 503);
   }
 
-  let data;
+  let payload;
   try {
-    data = await res.json();
+    payload = await response.json();
   } catch {
     throw createError('Réponse worker invalide', 502);
   }
 
-  if (!res.ok) {
-    throw createError(data.error || 'Erreur worker', 400);
+  if (!response.ok) {
+    throw createError(payload.error || 'Erreur Python', 400);
   }
 
-  if (typeof data.result !== 'number') {
+  if (typeof payload.result !== 'number') {
     throw createError('Résultat invalide du worker', 502);
   }
 
-  return data.result;
+  return payload.result;
 }
 
 async function calculateExpression(expression) {
   const ast = parseExpression(expression);
   const emlTree = toEML(ast);
-  return runEmlWorker(emlTree);
+  return runWorker(emlTree);
 }
 
 module.exports = {
