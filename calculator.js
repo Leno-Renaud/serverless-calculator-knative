@@ -1,7 +1,8 @@
 const { create, all } = require('mathjs');
-const { spawnSync } = require('child_process');
 
 const math = create(all, {});
+
+const WORKER_URL = (process.env.WORKER_URL || 'http://localhost:8000').replace(/\/$/, '');
 
 class EMLNode {
   constructor(left, right = null) {
@@ -181,67 +182,33 @@ function toEML(ast) {
   return compile(ast);
 }
 
-// Point d'extension : aujourd'hui subprocess local, demain appel HTTP vers pods Kubernetes.
+// Point d'extension : aujourd'hui GET local port 8000, demain pods Kubernetes.
 async function runEmlWorker(emlTree) {
-  const emlJson = JSON.stringify(emlTree);
-  const pythonCandidates = ['python3', 'python'];
-  let lastError = null;
+  const emlParam = encodeURIComponent(JSON.stringify(emlTree));
 
-  for (const pyCmd of pythonCandidates) {
-    let res;
-    try {
-      res = spawnSync(pyCmd, ['calculator.py', emlJson], {
-        encoding: 'utf8',
-        maxBuffer: 10 * 1024 * 1024,
-        timeout: 10000,
-        cwd: __dirname,
-      });
-    } catch (err) {
-      lastError = err;
-      continue;
-    }
-
-    if (res.error) {
-      lastError = res.error;
-      continue;
-    }
-
-    const out = (res.stdout || '').trim();
-    const err = (res.stderr || '').trim();
-
-    if (res.status !== 0) {
-      let msg = 'Erreur Python';
-      try {
-        const parsed = JSON.parse(out || err);
-        msg = parsed.error || parsed.message || msg;
-      } catch {}
-      throw createError(msg);
-    }
-
-    if (!out) {
-      throw createError('Réponse Python vide');
-    }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(out);
-    } catch {
-      throw createError('JSON invalide reçu de Python');
-    }
-
-    if (parsed.error) {
-      throw createError(parsed.error);
-    }
-
-    if (typeof parsed.result !== 'number') {
-      throw createError('Résultat invalide de Python');
-    }
-
-    return parsed.result;
+  let res;
+  try {
+    res = await fetch(`${WORKER_URL}/eml?eml=${emlParam}`);
+  } catch (err) {
+    throw createError(`Worker inaccessible: ${err.message}`, 503);
   }
 
-  const errMsg = lastError ? lastError.message : 'Python non trouvé';
-  throw createError(`Impossible d'exécuter Python: ${errMsg}`);
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw createError('Réponse worker invalide', 502);
+  }
+
+  if (!res.ok) {
+    throw createError(data.error || 'Erreur worker', 400);
+  }
+
+  if (typeof data.result !== 'number') {
+    throw createError('Résultat invalide du worker', 502);
+  }
+
+  return data.result;
 }
 
 async function calculateExpression(expression) {
