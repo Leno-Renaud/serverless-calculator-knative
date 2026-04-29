@@ -1,4 +1,4 @@
-const { calculateExpression } = require('./calculator');
+const { calculateExpression } = require('./calc/calculator');
 
 const expression = process.argv.slice(2).join(' ').trim();
 

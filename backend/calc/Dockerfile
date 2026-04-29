@@ -5,7 +5,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY app.js calculator.js cli.js test_calculator.js ./
+COPY app.js cli.js test_calculator.js ./
+COPY calc ./calc
 
 EXPOSE 3000
 

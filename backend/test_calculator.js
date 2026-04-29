@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { calculateExpression } = require('./calculator');
+const { calculateExpression } = require('./calc/calculator');
 
 function approx(a, b, tol = 1e-9) {
   return Math.abs(a - b) <= tol;

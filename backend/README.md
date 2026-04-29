@@ -13,7 +13,7 @@ Frontend
       normalizeExpression()
       parseExpression()    → AST
       toEML()              → arbre EML
-      runEmlWorker()       → subprocess python3 calculator.py
+      runEmlWorker()       → HTTP vers worker/worker.py
   → Worker Python local
       eval_eml()           → résultat via cmath
   → Backend → { "result": 22.6 }
@@ -35,7 +35,7 @@ Frontend
   → Backend → Frontend
 ```
 
-La fonction `runEmlWorker()` dans [calculator.js](calculator.js) est le seul point
+La fonction `runEmlWorker()` dans [calc/calculator.js](calc/calculator.js) est le seul point
 à modifier pour passer du mode local au mode distribué.
 
 ---

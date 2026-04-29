@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { calculateExpression } = require('./calculator');
+const { calculateExpression } = require('./calc/calculator');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
