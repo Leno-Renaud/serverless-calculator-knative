@@ -7,7 +7,7 @@ import { useState } from 'react'
 export default function App() {
   const [expression, setExpression] = useState("")
   const handleKeyPress = (value) => {
-    if (value === "↩") {
+    if (value === "⌫") {
       setExpression("")
       return
     }
