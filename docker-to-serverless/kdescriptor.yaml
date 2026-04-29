@@ -1,50 +1,133 @@
-#lit deployment, demande à kubernetes d'ouvrir/maintenir nombre de pods (conteneurs). Quand on envoie requête au nodePort, kubernetes redirige vers un des pods dispo.
-
-
-# Simple application with service
-apiVersion: apps/v1
-#deployment: assure le bon nombre de pods tourne en permanence
-kind: Deployment
-metadata:
-  name: calculator-app
-spec:
-  #replicas: nombre de pods
-  replicas: 3
-  #méthode de sélection des pods à gérer, label calc
-  selector:
-    matchLabels:
-      app: calc
-  #template: modèle de pod à créer
-  template:
-    metadata:
-      labels:
-        app: calc
-    spec:
-      containers:
-      - name: web
-        #image docker à utiliser
-        image: calculatrice:latest
-        #local, interdit de pull l'image depuis internet
-        imagePullPolicy: Never
-        ports:
-        #port où le processus à l'intérieur du conteneur écoute
-        - containerPort: 80
+# Serverless Calculator - Kubernetes (k3s) Descriptor
+# 3 services : frontend (Nginx), backend (Node.js), worker (Python)
+# Namespace: calculator
 
 ---
 apiVersion: v1
-#service: point d'entrée pour accéder à l'application, répartiteur de charge
+kind: Namespace
+metadata:
+  name: calculator
+
+---
+# Worker Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: calculator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+      - name: worker
+        image: worker:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000
+        env:
+        - name: FLASK_PORT
+          value: "8000"
+
+---
+# Worker Service (ClusterIP - internal only)
+apiVersion: v1
 kind: Service
 metadata:
-  name: calc-service
+  name: worker
+  namespace: calculator
 spec:
-  #router le trafic vers les pods avec le label calc
   selector:
-    app: calc
+    app: worker
   ports:
-  #port du service dans le cluster
+  - port: 8000
+    targetPort: 8000
+  type: ClusterIP
+
+---
+# Backend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: calculator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: backend:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        env:
+        - name: WORKER_URL
+          value: "http://worker:8000"
+
+---
+# Backend Service (ClusterIP - internal)
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: calculator
+spec:
+  selector:
+    app: backend
+  ports:
+  - port: 3000
+    targetPort: 3000
+  type: ClusterIP
+
+---
+# Frontend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: calculator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: frontend:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80
+
+---
+# Frontend Service (NodePort - exposed to user)
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: calculator
+spec:
+  selector:
+    app: frontend
+  ports:
   - port: 80
-  #port utilisé dans les pods (défini dans deployment)
     targetPort: 80
-    #port sur lequel le service est exposé à l'extérieur du cluster
     nodePort: 30080
   type: NodePort
