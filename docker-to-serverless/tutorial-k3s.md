@@ -23,6 +23,12 @@ cd /path/to/serverless-calculator
 docker build -t frontend:latest ./Frontend/calculator-interface
 docker build -t backend:latest ./backend/calc
 docker build -t worker:latest ./backend/worker
+(podman save localhost/worker:latest -o worker.tar
+podman save localhost/backend:latest -o backend.tar
+podman save localhost/frontend:latest -o frontend.tar
+sudo k3s ctr images import worker.tar
+sudo k3s ctr images import backend.tar
+sudo k3s ctr images import frontend.tar)
 ```
 
 ## Étape 3 : Utiliser le descripteur Kubernetes
