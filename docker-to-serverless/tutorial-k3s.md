@@ -55,13 +55,7 @@ Vérifier que les pods se lancent :
 ```bash
 kubectl get pods -n calculator
 ```
-
-Attendre que tous les pods soient `Running` :
-```bash
-kubectl get pods -n calculator -w
-```
-
-## Étape 5 : Accéder à l'application (macOS/Linux avec VM)
+## Étape 5 : Accéder à l'application
 
 Les services Kubernetes sont internes au cluster. Utiliser **port-forward** pour créer des tunnels réseau :
 
@@ -87,11 +81,6 @@ curl -X POST http://localhost:3000/calculate \
   -d '{"expression":"2+2"}'
 ```
 
-Réponse attendue :
-```json
-{"result":4}
-```
-
 ## Commandes Utiles
 
 ### Pods et Services
@@ -111,60 +100,4 @@ kubectl logs -n calculator pod/worker-*
 kubectl logs -n calculator pod/frontend-*
 ```
 
-### Management
-```bash
-# Redémarrer un deployment
-kubectl rollout restart deployment/backend -n calculator
-
-# Supprimer tout le namespace (tous les pods)
-kubectl delete namespace calculator
-
-# Réappliquer les manifests
-kubectl apply -f docker-to-serverless/kdescriptor.yaml
-```
-
-## Troubleshooting
-
-### Les pods ne démarrent pas
-
-```bash
-# Vérifier les logs
-kubectl logs -n calculator pod/<pod-name>
-
-# Vérifier l'état du pod
-kubectl describe pod -n calculator pod/<pod-name>
-```
-
-### Les images ne sont pas trouvées
-
-Vérifier que les images ont été construites dans le bon contexte Docker :
-```bash
-docker images | grep -E "frontend|backend|worker"
-```
-
-Si les images manquent, les reconstruire.
-
-### La calculatrice ne fonctionne pas
-
-1. Vérifier que les 3 pods sont `Running` : `kubectl get pods -n calculator`
-2. Vérifier les port-forwards sont actifs
-3. Vérifier les logs du backend : `kubectl logs -n calculator pod/backend-*`
-4. Vérifier les logs du worker : `kubectl logs -n calculator pod/worker-*`
-
-## Différences entre Linux et macOS
-
-| Aspect | Linux | macOS (colima) |
-|--------|-------|----------------|
-| DNS interne | Natif, résolvable par le host | Non accessible, nécessite port-forward |
-| Accès à NodePort | Directement via localhost | Nécessite port-forward |
-| Docker context | Partagé natif | Isolé dans VM colima |
-| Performance | Natif | Léger overhead VM |
-
-## Notes Importantes
-
-- **imagePullPolicy: Never** : Les images doivent être construites localement, pas téléchargées
-- **ClusterIP** : Backend et worker ne sont accessibles que depuis l'intérieur du cluster
-- **NodePort** : Frontend est exposé via le port 30080 (interne au cluster)
-- **Port-forward macOS** : Obligatoire sur macOS pour accéder aux services Kubernetes
-
-Bonne déploiement ! 🚀
+Bonne déploiement !
