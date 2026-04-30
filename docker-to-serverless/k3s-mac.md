@@ -2,7 +2,7 @@
 
 ## Prérequis
 - Avoir 3 Dockerfiles : `Frontend/calculator-interface/Dockerfile`, `backend/calc/Dockerfile`, `backend/worker/Dockerfile`
-- Avoir le manifest k8s : `docker-to-serverless/kdescriptor.yaml`
+- Avoir le manifest k8s : `docker-to-serverless/kdescriptor-mac.yaml`
 
 ## Étape 1 : Installer et démarrer Colima avec Kubernetes
 
@@ -36,7 +36,7 @@ docker build -t worker:latest ./backend/worker
 
 ```bash
 # Appliquer tous les descriptors (namespace + deployments + services)
-kubectl apply -f docker-to-serverless/kdescriptor.yaml
+kubectl apply -f docker-to-serverless/kdescriptor-mac.yaml
 
 # Vérifier que les pods se lancent bien
 kubectl get pods -n calculator

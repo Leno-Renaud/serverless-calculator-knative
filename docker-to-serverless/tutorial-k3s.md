@@ -27,7 +27,7 @@ docker build -t worker:latest ./backend/worker
 
 ## Étape 3 : Utiliser le descripteur Kubernetes
 
-Le fichier `docker-to-serverless/kdescriptor.yaml` contient toute la configuration :
+Le fichier `docker-to-serverless/kdescriptor-linux.yaml` contient toute la configuration :
 - **Namespace** : `calculator` (isolation logique)
 - **Deployments** : 1 pour chaque service
 - **Services** : 3 services (ClusterIP interne + NodePort frontend)
@@ -42,7 +42,7 @@ Le descripteur spécifie aussi :
 Avant toute chose, démarrez le programme shell du serveur avec `./startk3sServer.sh`. Ce programme se trouve dans l'iso k3s dispo sur tc-net, dans le dossier `home/user`.
 
 ```bash
-kubectl apply -f docker-to-serverless/kdescriptor.yaml
+kubectl apply -f docker-to-serverless/kdescriptor-linux.yaml
 ```
 
 Vérifier que les pods se lancent :
