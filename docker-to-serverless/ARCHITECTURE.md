@@ -9,6 +9,7 @@
 ```bash
 kubectl port-forward -n calculator service/frontend 8080:80 --address 127.0.0.1
 ```
+"localhost:8080 → namespace calculator, Service name:frontend (port 80)"
 
 "Crée un tunnel. `localhost:8080` sur ma machine, redirige vers le port 80 du Service frontend (qui a une IP stable) dans Kubernetes."
 
@@ -16,7 +17,5 @@ Quand tu cibler `service/frontend`, tu cibles en réalité :
 - **IP stable du Service** : ex `10.43.11.125` (ClusterIP)
 - **Port d'écoute** : `80` (défini dans kdescriptor.yaml)
 - **Nom DNS** : `frontend` (résolvable dans le cluster)
-
-"localhost:3000 → Service backend (port 3000)"
 
 **En production Linux**, le DNS Kubernetes fonctionne directement depuis le cluster, donc pas besoin de port-forward pour les échanges internes.
