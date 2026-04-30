@@ -1,0 +1,133 @@
+# Serverless Calculator - Kubernetes (k3s) Descriptor
+# 3 services : frontend (Nginx), backend (Node.js), worker (Python)
+# Namespace: calculator
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: calculator
+
+---
+# Worker Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: calculator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+      - name: worker
+        image: localhost/worker:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000
+        env:
+        - name: FLASK_PORT
+          value: "8000"
+
+---
+# Worker Service (ClusterIP - internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker
+  namespace: calculator
+spec:
+  selector:
+    app: worker
+  ports:
+  - port: 8000
+    targetPort: 8000
+  type: ClusterIP
+
+---
+# Backend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: calculator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: localhost/backend:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        env:
+        - name: WORKER_URL
+          value: "http://worker:8000"
+
+---
+# Backend Service (ClusterIP - internal)
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: calculator
+spec:
+  selector:
+    app: backend
+  ports:
+  - port: 3000
+    targetPort: 3000
+  type: ClusterIP
+
+---
+# Frontend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: calculator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: localhost/frontend:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 80
+
+---
+# Frontend Service (NodePort - exposed to user)
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: calculator
+spec:
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30080
+  type: NodePort
