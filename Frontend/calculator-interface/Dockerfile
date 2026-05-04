@@ -4,9 +4,6 @@ FROM docker.io/library/node:20-alpine AS build
 
 #Crée un dossier /app à l'intérieur du conteneur et s'y déplace
 WORKDIR /app
-#URL API injectée au build Vite
-ARG VITE_API_URL=http://localhost:3000
-ENV VITE_API_URL=$VITE_API_URL
 #Copie fichiers de configuration npm depuis Mac vers le dossier /app du conteneur.
 #si seul code react change, gain de temps en ne réinstallant pas les dépendances
 COPY package*.json ./
@@ -23,6 +20,9 @@ RUN npm run build
 #démarre une toute nouvelle image, vierge, contenant uniquement le serveur web Nginx.
 #Nginx intercepte la demande, va chercher ces fichiers, et les envoie au navigateur de l'utilisateur.
 FROM docker.io/library/nginx:alpine
+
+# Copie la configuration Nginx personnalisée
+COPY nginx/nginx-k3s.conf /etc/nginx/conf.d/default.conf
 
 #cherche /dist dans environnmenet build, dépose dans le dossier où Nginx sert les fichiers web.
 COPY --from=build /app/dist /usr/share/nginx/html

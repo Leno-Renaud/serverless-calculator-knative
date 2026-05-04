@@ -2,14 +2,17 @@
 
 ## Prérequis
 - Avoir 3 Dockerfiles : `Frontend/calculator-interface/Dockerfile`, `backend/calc/Dockerfile`, `backend/worker/Dockerfile`
-- Avoir le manifest k8s : `docker-to-serverless/kdescriptor-mac.yaml`
+- Avoir le manifest k8s : `k3s/kdescriptor-mac.yaml`
 
 ## Étape 1 : Installer et démarrer Colima avec Kubernetes
 
 ```bash
 # Installation (une seule fois)
 brew install colima
-
+#clear une ancienne version
+colima delete
+rm -rf ~/.colima
+rm -rf ~/.lima
 # Démarrer colima avec k3s
 colima start --kubernetes
 
@@ -36,7 +39,7 @@ docker build -t worker:latest ./backend/worker
 
 ```bash
 # Appliquer tous les descriptors (namespace + deployments + services)
-kubectl apply -f docker-to-serverless/kdescriptor-mac.yaml
+kubectl apply -f k3s/kdescriptor-mac.yaml
 
 # Vérifier que les pods se lancent bien
 kubectl get pods -n calculator
@@ -51,14 +54,11 @@ Tous les pods doivent être `Running` pour que l'app fonctionne.
 
 Colima crée une VM isolée. Les services Kubernetes ne sont pas accessibles depuis localhost sans port-forward.
 
-**Créer 2 tunnels** (dans deux fenêtres de terminal différentes) :
+**Créer un tunnel**
 
 ```bash
 # Terminal 1 : Frontend (Nginx)
 kubectl port-forward -n calculator service/frontend 8080:80 --address 127.0.0.1
-
-# Terminal 2 : Backend (Node.js)
-kubectl port-forward -n calculator service/backend 3000:3000 --address 127.0.0.1
 ```
 
 ## Étape 5 : Tester l'application

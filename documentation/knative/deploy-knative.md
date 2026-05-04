@@ -10,6 +10,8 @@ Ces commandes s'exécutent avec `kubectl` et fonctionnent de manière identique 
 #linux
 ./startk3sServer.sh
 #équivalent mac
+# Installation (une seule fois)
+brew install colima
 #clear une ancienne version
 colima delete
 rm -rf ~/.colima
@@ -55,13 +57,13 @@ kubectl get pods -n knative-serving
 Dans les dossiers contenant les Dockerfiles
 ```bash
 docker login
-docker build -t docker.io/TON_USER_DOCKERHUB/frontend:1.0 ./Frontend/calculator-interface
-docker build -t docker.io/TON_USER_DOCKERHUB/backend:1.0 ./backend/calc
-docker build -t docker.io/TON_USER_DOCKERHUB/worker:1.0 ./backend/worker
+docker build -f ./Frontend/calculator-interface/Dockerfile-knative -t docker.io/DOCKER_USERNAME/frontend:1.0 ./Frontend/calculator-interface
+docker build -t docker.io/DOCKER_USERNAME/backend:1.0 ./backend/calc
+docker build -t docker.io/DOCKER_USERNAME/worker:1.0 ./backend/worker
 
-docker push docker.io/TON_USER_DOCKERHUB/frontend:1.0
-docker push docker.io/TON_USER_DOCKERHUB/backend:1.0
-docker push docker.io/TON_USER_DOCKERHUB/worker:1.0
+docker push docker.io/DOCKER_USERNAME/frontend:1.0
+docker push docker.io/DOCKER_USERNAME/backend:1.0
+docker push docker.io/DOCKER_USERNAME/worker:1.0
 ```
 
 
@@ -80,7 +82,7 @@ spec:
   template:
     spec:
       containers:
-        - image: lenorenaud/worker:1.0
+        - image: DOCKER_USERNAME/worker:1.0
           imagePullPolicy: IfNotPresent
           env:
             - name: FLASK_PORT
@@ -97,7 +99,7 @@ spec:
   template:
     spec:
       containers:
-        - image: lenorenaud/backend:1.0
+        - image: DOCKER_USERNAME/backend:1.0
           imagePullPolicy: IfNotPresent
           env:
             - name: WORKER_URL
@@ -114,7 +116,7 @@ spec:
   template:
     spec:
       containers:
-        - image: lenorenaud/frontend:1.0
+        - image: DOCKER_USERNAME/frontend:1.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -122,7 +124,7 @@ spec:
 
 Puis déployez :
 ```bash
-kubectl apply -f knative.yaml
+kubectl apply -f knative/simple/knative.yaml
 #si jamais complete_control, apply config-autoscaler puis knative.yaml
 ```
 vérifier:

@@ -6,7 +6,7 @@ spec:
   template:
     spec:
       containers:
-        - image: lenorenaud/worker:1.0
+        - image: DOCKER_USERNAME/worker:1.0
           imagePullPolicy: IfNotPresent
           env:
             - name: FLASK_PORT
@@ -23,11 +23,11 @@ spec:
   template:
     spec:
       containers:
-        - image: lenorenaud/backend:1.0
+        - image: DOCKER_USERNAME/backend:1.0
           imagePullPolicy: IfNotPresent
           env:
             - name: WORKER_URL
-              value: http://worker:8000
+              value: http://worker.default.svc.cluster.local
           ports:
             - containerPort: 3000
 
@@ -40,7 +40,7 @@ spec:
   template:
     spec:
       containers:
-        - image: lenorenaud/frontend:1.0
+        - image: DOCKER_USERNAME/frontend:1.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

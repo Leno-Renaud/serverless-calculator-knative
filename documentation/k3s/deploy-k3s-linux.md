@@ -33,7 +33,7 @@ sudo k3s ctr images import frontend.tar)
 
 ## Étape 3 : Utiliser le descripteur Kubernetes
 
-Le fichier `docker-to-serverless/kdescriptor-linux.yaml` contient toute la configuration :
+Le fichier `k3s/kdescriptor-linux.yaml` contient toute la configuration :
 - **Namespace** : `calculator` (isolation logique)
 - **Deployments** : 1 pour chaque service
 - **Services** : 3 services (ClusterIP interne + NodePort frontend)
@@ -48,7 +48,7 @@ Le descripteur spécifie aussi :
 Avant toute chose, démarrez le programme shell du serveur avec `./startk3sServer.sh`. Ce programme se trouve dans l'iso k3s dispo sur tc-net, dans le dossier `home/user`.
 
 ```bash
-kubectl apply -f docker-to-serverless/kdescriptor-linux.yaml
+kubectl apply -f k3s/kdescriptor-linux.yaml
 ```
 
 Vérifier que les pods se lancent :
@@ -60,11 +60,8 @@ kubectl get pods -n calculator
 Les services Kubernetes sont internes au cluster. Utiliser **port-forward** pour créer des tunnels réseau :
 
 ```bash
-# Terminal 1 : Frontend (Nginx)
+# Terminal : Frontend (Nginx)
 kubectl port-forward -n calculator service/frontend 8080:80 --address 127.0.0.1
-
-# Terminal 2 : Backend (Node.js)
-kubectl port-forward -n calculator service/backend 3000:3000 --address 127.0.0.1
 ```
 
 ## Étape 6 : Tester l'application
