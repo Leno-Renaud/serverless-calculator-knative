@@ -1,13 +1,46 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: calc-serverless
+  name: worker
 spec:
   template:
     spec:
       containers:
-        # Mettre nom de l'image docker à utiliser
-        - image: docker.io/lenorenaud/calculator-interface:1.0
+        - image: lenorenaud/worker:1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: FLASK_PORT
+              value: "8000"
+          ports:
+            - containerPort: 8000
+
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  template:
+    spec:
+      containers:
+        - image: lenorenaud/backend:1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: WORKER_URL
+              value: http://worker:8000
+          ports:
+            - containerPort: 3000
+
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  template:
+    spec:
+      containers:
+        - image: lenorenaud/frontend:1.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

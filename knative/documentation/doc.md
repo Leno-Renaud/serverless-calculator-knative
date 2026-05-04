@@ -7,7 +7,14 @@ Ces commandes s'exécutent avec `kubectl` et fonctionnent de manière identique 
 ### A. Installer le cœur de Knative (Serving Core)
 
 ```bash
-#mac uniquement (équivalent startk3sServer.sh)
+#linux
+./startk3sServer.sh
+#équivalent mac
+#clear une ancienne version
+colima delete
+rm -rf ~/.colima
+rm -rf ~/.lima
+#démarrer
 colima start --kubernetes
 
 # 1. Installer les ressources personnalisées
@@ -44,17 +51,18 @@ kubectl get pods -n knative-serving
 ```
 *Le cluster est prêt lorsque `activator`, `autoscaler`, `controller`, et `webhook` sont tous à l'état `Running`.*
 
-### D. Construire le conteneur
-Dans le dossier avec la dockerfile
+### D. Construire les trois conteneurs
+Dans les dossiers contenant les Dockerfiles
 ```bash
 docker login
-docker build -t docker.io/TON_USER_DOCKERHUB/calculatrice:1.0 .
-docker push docker.io/TON_USER_DOCKERHUB/calculatrice:1.0
-```
+docker build -t docker.io/TON_USER_DOCKERHUB/frontend:1.0 ./Frontend/calculator-interface
+docker build -t docker.io/TON_USER_DOCKERHUB/backend:1.0 ./backend/calc
+docker build -t docker.io/TON_USER_DOCKERHUB/worker:1.0 ./backend/worker
 
-Mettre à jour knative.yaml
-Remplace le champ image par ton image Docker Hub complète:
-image: docker.io/TON_USER_DOCKERHUB/calculatrice:1.0
+docker push docker.io/TON_USER_DOCKERHUB/frontend:1.0
+docker push docker.io/TON_USER_DOCKERHUB/backend:1.0
+docker push docker.io/TON_USER_DOCKERHUB/worker:1.0
+```
 
 
 ---
@@ -67,13 +75,47 @@ Il suffit d'un seul fichier `knative.yaml` très simple :
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: calc-serverless
+  name: worker
 spec:
   template:
     spec:
       containers:
-        # Remplacez par le nom de l'image buildée localement
-        - image: docker.io/lenorenaud/calculatrice:1.0
+        - image: lenorenaud/worker:1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: FLASK_PORT
+              value: "8000"
+          ports:
+            - containerPort: 8000
+
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  template:
+    spec:
+      containers:
+        - image: lenorenaud/backend:1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: WORKER_URL
+              value: http://worker:8000
+          ports:
+            - containerPort: 3000
+
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  template:
+    spec:
+      containers:
+        - image: lenorenaud/frontend:1.0
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
 ```
@@ -81,7 +123,7 @@ spec:
 Puis déployez :
 ```bash
 kubectl apply -f knative.yaml
-#si jamais complete_control, apply config-autoscaler et knative.yaml
+#si jamais complete_control, apply config-autoscaler puis knative.yaml
 ```
 vérifier:
 ```bash
@@ -89,11 +131,15 @@ kubectl get ksvc
 kubectl get revision
 ```
 
-### 3. configure un domaine knative local
-Récupère ton IP LAN (macOS):
+### 3. configurer un domaine knative local
+Récupère ton IP LAN :
 
 ```bash
+# macOS
 ipconfig getifaddr en0
+
+# Linux
+hostname -I | awk '{print $1}'
 ```
 Ajoute-la au `config-domain` de Knative :
 
@@ -101,7 +147,7 @@ Ajoute-la au `config-domain` de Knative :
 kubectl patch configmap config-domain -n knative-serving --type merge -p '{"data":{"<NOUVELLE_IP>.sslip.io":""}}'
 ```
 
-5) Exposer Kourier (macos uniquement)
+5) Exposer Kourier
 
 Le plus simple chez moi est de faire un `port-forward` sur un port libre, par exemple `8080`.
 
@@ -114,15 +160,15 @@ Tu laisses cette commande ouverte dans le terminal.
 Ensuite depuis n'importe quel PC du LAN ouvre :
 
 ```text
-http://calc-serverless.default.<IP>.sslip.io:8080/
+http://frontend.default.<IP>.sslip.io:8080/
 ```
 **Bravo !** Votre application démarrera à la première requête locale. Si vous ne l'utilisez pas pendant ~60 secondes, elle s'éteindra automatiquement pour libérer la RAM de votre machine.
 ### 4. Commandes de vérification
 ```bash
 #nombre de conteneurs lancés
 kubectl get pods -n default
-#état knative du service
-kubectl get ksvc calc-serverless -o wide
+#état knative des services
+kubectl get ksvc -o wide
 kubectl get revision
 #ce que fait l'autoscaler
 kubectl get kpa -n default
