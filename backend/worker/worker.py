@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify
+import math
 import os
 import requests
 
@@ -13,6 +14,11 @@ _eml_count = 0
 def eml(x, y):
     global _eml_count
     _eml_count += 1
+    # Edge cases that can't be sent to the EML service (JSON doesn't support inf/nan, b=0 rejected)
+    if not math.isfinite(x) or y <= 0:
+        exp_x = math.exp(x) if math.isfinite(x) else (0.0 if x < 0 else float('inf'))
+        log_y = math.log(y) if y > 0 else float('-inf')
+        return exp_x - log_y
     try:
         response = requests.post(
             f"{EML_URL}/eml",
@@ -33,6 +39,8 @@ def exp_1(x):
 
 
 def log_1(x):
+    if x <= 0:
+        return float('-inf')
     return eml(1, exp_1(eml(1, x)))
 
 
