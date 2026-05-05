@@ -2,6 +2,7 @@
 from flask import Flask, request, jsonify
 import math
 import os
+import requests
 
 app = Flask(__name__)
 
@@ -10,7 +11,13 @@ emlcounter = 0
 
 def eml(x, y):
     emlcounter += 1
-    return math.exp(x) - math.log(y)
+    response = requests.post(
+        f"{EML_URL}/eml",
+        headers={"Content-Type": "application/json"},
+        json={"a" : x , "b" : y} 
+    )
+    data = response.json()
+    return data["result"]
 
 
 def exp_1(x):
