@@ -94,10 +94,11 @@ setup_engine() {
 build_loop() {
     while true; do
         CHOICES=$(dialog --clear --title "Build Images" \
-            --checklist "Select images to build (Space to select, Enter to confirm):" 15 60 3 \
+            --checklist "Select images to build (Space to select, Enter to confirm):" 15 60 4 \
             "frontend" "Frontend Interface" ON \
             "backend" "Backend Orchestrator" ON \
             "worker" "Python Worker" ON \
+            "eml" "EML Evaluator" ON \
             3>&1 1>&2 2>&3) || break # Break on Cancel
 
         if [ -z "$CHOICES" ]; then break; fi
@@ -128,6 +129,11 @@ build_loop() {
                     if [[ "$DEPLOY_TYPE" == "knative" ]]; then TAG="docker.io/$GIT_USERNAME/worker:1.0"; fi
                     docker build -t "$TAG" ./backend/worker
                     ;;
+                eml)
+                    TAG="eml:latest"
+                    if [[ "$DEPLOY_TYPE" == "knative" ]]; then TAG="docker.io/$GIT_USERNAME/eml:1.0"; fi
+                    docker build -t "$TAG" ./backend/eml
+                    ;;
             esac
 
             if [[ "$DEPLOY_TYPE" == "knative" ]]; then
@@ -151,8 +157,19 @@ deploy_loop() {
             FILE="k3s/kdescriptor-$PLATFORM.yaml"
             OPTIONS=("$FILE" "Standard k3s Manifest" ON)
         else
-            FILE="knative/simple/knative.yaml"
-            OPTIONS=("$FILE" "Simple Knative Manifest" ON)
+            KNATIVE_CHOICE=$(dialog --clear --title "Knative Configuration" \
+                --menu "Which Knative configuration do you want to use?" 10 50 2 \
+                "simple" "Basic Scale-to-Zero" \
+                "complete" "Advanced Autoscaling & Control" \
+                3>&1 1>&2 2>&3)
+            clear
+            if [[ "$KNATIVE_CHOICE" == "complete" ]]; then
+                FILE="knative/complete_control/knative.yaml"
+                OPTIONS=("$FILE" "Complete Control Manifest" ON)
+            else
+                FILE="knative/simple/knative.yaml"
+                OPTIONS=("$FILE" "Simple Knative Manifest" ON)
+            fi
         fi
 
         CHOICES=$(dialog --clear --title "Apply Manifests" \

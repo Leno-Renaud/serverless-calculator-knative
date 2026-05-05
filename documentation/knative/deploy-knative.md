@@ -53,17 +53,20 @@ kubectl get pods -n knative-serving
 ```
 *Le cluster est prêt lorsque `activator`, `autoscaler`, `controller`, et `webhook` sont tous à l'état `Running`.*
 
-### D. Construire les trois conteneurs
+### D. Construire les quatre conteneurs
 Dans les dossiers contenant les Dockerfiles
 ```bash
 docker login
-docker build -f ./Frontend/calculator-interface/Dockerfile-knative -t docker.io/DOCKER_USERNAME/frontend:1.0 ./Frontend/calculator-interface
-docker build -t docker.io/DOCKER_USERNAME/backend:1.0 ./backend/calc
-docker build -t docker.io/DOCKER_USERNAME/worker:1.0 ./backend/worker
+docker build -f ./Frontend/calculator-interface/Dockerfile-knative -t docker.io/lenorenaud/frontend:1.0 ./Frontend/calculator-interface
+docker build -t docker.io/lenorenaud/backend:1.0 ./backend/calc
+docker build -t docker.io/lenorenaud/worker:1.0 ./backend/worker
+docker build -t docker.io/lenorenaud/eml:1.0 ./backend/eml
 
-docker push docker.io/DOCKER_USERNAME/frontend:1.0
-docker push docker.io/DOCKER_USERNAME/backend:1.0
-docker push docker.io/DOCKER_USERNAME/worker:1.0
+
+docker push docker.io/lenorenaud/frontend:1.0
+docker push docker.io/lenorenaud/backend:1.0
+docker push docker.io/lenorenaud/worker:1.0
+docker push docker.io/lenorenaud/eml:1.0
 ```
 
 
@@ -74,6 +77,24 @@ docker push docker.io/DOCKER_USERNAME/worker:1.0
 Il suffit d'un seul fichier `knative.yaml` très simple :
 
 ```yaml
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: eml
+spec:
+  template:
+    spec:
+      containers:
+        - image: docker.io/DOCKER_USERNAME/eml:1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: FLASK_PORT
+              value: "10000"
+          ports:
+            - containerPort: 10000
+
+---
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
@@ -82,11 +103,13 @@ spec:
   template:
     spec:
       containers:
-        - image: DOCKER_USERNAME/worker:1.0
+        - image: docker.io/DOCKER_USERNAME/worker:1.0
           imagePullPolicy: IfNotPresent
           env:
             - name: FLASK_PORT
               value: "8000"
+            - name: EML_URL
+              value: http://eml.default.svc.cluster.local
           ports:
             - containerPort: 8000
 
@@ -99,11 +122,11 @@ spec:
   template:
     spec:
       containers:
-        - image: DOCKER_USERNAME/backend:1.0
+        - image: docker.io/DOCKER_USERNAME/backend:1.0
           imagePullPolicy: IfNotPresent
           env:
             - name: WORKER_URL
-              value: http://worker:8000
+              value: http://worker.default.svc.cluster.local
           ports:
             - containerPort: 3000
 
@@ -116,11 +139,11 @@ spec:
   template:
     spec:
       containers:
-        - image: DOCKER_USERNAME/frontend:1.0
+        - image: docker.io/DOCKER_USERNAME/frontend:1.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
-```
+
 
 Puis déployez :
 ```bash

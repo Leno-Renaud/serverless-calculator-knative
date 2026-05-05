@@ -1,16 +1,35 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
+  name: eml
+spec:
+  template:
+    spec:
+      containers:
+        - image: docker.io/DOCKER_USERNAME/eml:1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: FLASK_PORT
+              value: "10000"
+          ports:
+            - containerPort: 10000
+
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
   name: worker
 spec:
   template:
     spec:
       containers:
-        - image: DOCKER_USERNAME/worker:1.0
+        - image: docker.io/DOCKER_USERNAME/worker:1.0
           imagePullPolicy: IfNotPresent
           env:
             - name: FLASK_PORT
               value: "8000"
+            - name: EML_URL
+              value: http://eml.default.svc.cluster.local
           ports:
             - containerPort: 8000
 
@@ -23,7 +42,7 @@ spec:
   template:
     spec:
       containers:
-        - image: DOCKER_USERNAME/backend:1.0
+        - image: docker.io/DOCKER_USERNAME/backend:1.0
           imagePullPolicy: IfNotPresent
           env:
             - name: WORKER_URL
@@ -40,7 +59,7 @@ spec:
   template:
     spec:
       containers:
-        - image: DOCKER_USERNAME/frontend:1.0
+        - image: docker.io/DOCKER_USERNAME/frontend:1.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

@@ -31,12 +31,13 @@ Frontend
   → Backend Node (orchestrateur)
       runEmlWorker()  →  POST WORKER_URL/eml  { "eml": <arbre> }
                      ←  { "result": 22.6 }
-  → Workers Python dans des pods Kubernetes / Knative
-  → Backend → Frontend
+  → Workers Python
+      eval_eml()      →  POST EML_URL/eml { "eml": <arbre> }
+  → Pod EML (évaluateur final)
+  → Worker → Backend → Frontend
 ```
 
-La fonction `runEmlWorker()` dans [calc/calculator.js](calc/calculator.js) est le seul point
-à modifier pour passer du mode local au mode distribué.
+La fonction `runEmlWorker()` dans [calc/calculator.js](calc/calculator.js) est le point d'entrée pour l'orchestration, et le worker Python délègue maintenant l'exécution réelle au service EML.
 
 ---
 
