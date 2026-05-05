@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify
-import math
 import os
+import requests
 
 app = Flask(__name__)
+
+EML_URL = os.environ.get('EML_URL', 'http://localhost:10000')
 
 _eml_count = 0
 
@@ -11,8 +13,19 @@ _eml_count = 0
 def eml(x, y):
     global _eml_count
     _eml_count += 1
-    log_y = float('-inf') if y == 0 else math.log(y)
-    return math.exp(x) - log_y
+    try:
+        response = requests.post(
+            f"{EML_URL}/eml",
+            headers={"Content-Type": "application/json"},
+            json={"a": x, "b": y}
+        )
+        data = response.json()
+        if response.ok:
+            return data["result"]
+        else:
+            raise ValueError(data.get('error', 'Erreur EML'))
+    except Exception as e:
+        raise ValueError(f"Erreur lors de l'appel au service EML: {str(e)}")
 
 
 def exp_1(x):
@@ -58,6 +71,27 @@ def _add(a, b):
     return neg_1(plus_1(neg_1(a), neg_1(b)))
 
 
+def ast_to_eml(node):
+    if not isinstance(node, dict):
+        raise ValueError('Nœud AST invalide')
+
+    if node.get('type') == 'number':
+        return {
+            'isLeaf': True,
+            'value': float(node['value'])
+        }
+
+    if node.get('type') == 'op':
+        return {
+            'isLeaf': False,
+            'op': node['op'],
+            'left': ast_to_eml(node['left']),
+            'right': ast_to_eml(node['right'])
+        }
+
+    raise ValueError('Nœud AST invalide')
+
+
 def eval_eml(node):
     if not isinstance(node, dict):
         raise ValueError('Nœud EML invalide')
@@ -73,13 +107,13 @@ def eval_eml(node):
     left = eval_eml(node.get('left'))
     right = eval_eml(node.get('right'))
 
-    if op == 'add':
+    if op == '+':
         return _add(left, right)
-    if op == 'sub':
+    if op == '-':
         return _add(left, neg_1(right))
-    if op == 'mul':
+    if op == '*':
         return _signed(multiply_1, left, right)
-    if op == 'div':
+    if op == '/':
         if abs(right) < 1e-15:
             raise ZeroDivisionError('Division par zéro')
         return _signed(divide_1, left, right)
@@ -87,17 +121,18 @@ def eval_eml(node):
     raise ValueError('Opérateur non supporté')
 
 
-@app.route('/eml', methods=['POST'])
+@app.route('/worker', methods=['POST'])
 def calculate():
     global _eml_count
     _eml_count = 0
 
     data = request.get_json()
-    if not data or 'eml' not in data:
-        return jsonify({'error': 'EML manquant'}), 400
+    if not data or 'ast' not in data:
+        return jsonify({'error': 'AST manquant'}), 400
 
     try:
-        value = eval_eml(data['eml'])
+        eml_tree = ast_to_eml(data['ast'])
+        value = eval_eml(eml_tree)
     except ZeroDivisionError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:

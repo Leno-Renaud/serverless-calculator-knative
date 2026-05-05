@@ -3,25 +3,6 @@ const { create, all } = require('mathjs');
 const math = create(all, {});
 const WORKER_URL = (process.env.WORKER_URL || 'http://localhost:8000').replace(/\/$/, '');
 
-class EMLNode {
-  constructor(left, right = null, op = null) {
-    if (right === null) {
-      this.isLeaf = true;
-      this.value = left;
-      this.left = null;
-      this.right = null;
-      this.op = null;
-      return;
-    }
-
-    this.isLeaf = false;
-    this.value = null;
-    this.op = op;
-    this.left = left instanceof EMLNode ? left : new EMLNode(left);
-    this.right = right instanceof EMLNode ? right : new EMLNode(right);
-  }
-}
-
 function createError(message, statusCode = 400) {
   const error = new Error(message);
   error.statusCode = statusCode;
@@ -117,58 +98,42 @@ function validateAst(node) {
   throw createError('Caractères non supportés');
 }
 
-function toEML(ast) {
-  function compile(node) {
-    if (node.type === 'number') {
-      return new EMLNode(node.value);
-    }
-
-    const left = compile(node.left);
-    const right = compile(node.right);
-
-    switch (node.op) {
-      case '+':
-        return new EMLNode(left, right, 'add');
-      case '-':
-        return new EMLNode(left, right, 'sub');
-      case '*':
-        return new EMLNode(left, right, 'mul');
-      case '/':
-        return new EMLNode(left, right, 'div');
-      default:
-        throw createError('Opérateur non supporté');
-    }
-  }
-
-  return compile(ast);
-}
-
-async function runWorker(emlTree) {
+// Envoie l'AST au worker qui se charge de la conversion en EML et du calcul
+async function runWorker(ast) {
   let response;
 
   try {
-    response = await fetch(`${WORKER_URL}/eml`, {
+    response = await fetch(`${WORKER_URL}/worker`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eml: emlTree }),
+      body: JSON.stringify({ ast: ast }),
     });
   } catch (error) {
     throw createError(`Worker inaccessible: ${error.message}`, 503);
+  }
+
+  // Vérifier le statut HTTP d'abord
+  if (!response.ok) {
+    // Tenter de parser la réponse d'erreur
+    let errorMessage = 'Erreur du worker';
+    try {
+      const errorPayload = await response.json();
+      errorMessage = errorPayload.error || errorMessage;
+    } catch {
+      errorMessage = `Erreur worker (${response.status}): réponse invalide`;
+    }
+    throw createError(errorMessage, response.status);
   }
 
   let payload;
   try {
     payload = await response.json();
   } catch {
-    throw createError('Réponse worker invalide', 502);
-  }
-
-  if (!response.ok) {
-    throw createError(payload.error || 'Erreur Python', 400);
+    throw createError('Réponse worker invalide (JSON malformé)', 502);
   }
 
   if (typeof payload.result !== 'number') {
-    throw createError('Résultat invalide du worker', 502);
+    throw createError('Résultat invalide du worker (pas un nombre)', 502);
   }
 
   return payload.result;
@@ -176,12 +141,11 @@ async function runWorker(emlTree) {
 
 async function calculateExpression(expression) {
   const ast = parseExpression(expression);
-  const emlTree = toEML(ast);
-  return runWorker(emlTree);
+  // Envoie directement l'AST au worker sans conversion EML
+  return runWorker(ast);
 }
 
 module.exports = {
   parseExpression,
-  toEML,
   calculateExpression,
 };

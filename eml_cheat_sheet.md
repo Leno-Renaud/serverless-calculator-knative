@@ -1,4 +1,10 @@
-const eml = (x,y) => Math.exp(x) - Math.log(y)
+let count = 0;
+
+const eml = (x, y) => {
+  count++;
+  const result = Math.exp(x) - Math.log(y);
+  return result;
+}; 
 
 const exp = (x) => eml(x,1)
 
@@ -14,4 +20,4 @@ const prod = (x,y) => exp(log(x)+log(y))
 
 const div = (x,y) => prod(x,inv(y)) 
 
-const minus = (x) => sub(log(1),x) 
+const minus = (x) => sub(log(1),x)
