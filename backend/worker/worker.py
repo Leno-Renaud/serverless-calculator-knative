@@ -5,8 +5,10 @@ import os
 
 app = Flask(__name__)
 
+int emlcounter = 0
 
 def eml(x, y):
+    emlcounter += 1
     return math.exp(x) - math.log(y)
 
 
