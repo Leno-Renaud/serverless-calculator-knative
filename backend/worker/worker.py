@@ -6,18 +6,28 @@ import requests
 
 app = Flask(__name__)
 
+# URL du service EML pour externaliser le calcul eml(x, y) = exp(x) - log(y)
+EML_URL = os.environ.get('EML_URL', 'http://localhost:10000')
+
 global emlcounter
 emlcounter = 0
 
 def eml(x, y):
+    """Appelle le service EML pour calculer exp(x) - log(y)"""
     emlcounter += 1
-    response = requests.post(
-        f"{EML_URL}/eml",
-        headers={"Content-Type": "application/json"},
-        json={"a" : x , "b" : y} 
-    )
-    data = response.json()
-    return data["result"]
+    try:
+        response = requests.post(
+            f"{EML_URL}/eml",
+            headers={"Content-Type": "application/json"},
+            json={"a": x, "b": y}
+        )
+        data = response.json()
+        if response.ok:
+            return data["result"]
+        else:
+            raise ValueError(data.get('error', 'Erreur EML'))
+    except Exception as e:
+        raise ValueError(f"Erreur lors de l'appel au service EML: {str(e)}")
 
 
 def exp_1(x):
@@ -67,10 +77,35 @@ def _add(a, b):
     return neg_1(plus_1(neg_1(a), neg_1(b)))
 
 
+def ast_to_eml(node):
+    """Convertit un AST JavaScript en structure EML interne Python"""
+    if not isinstance(node, dict):
+        raise ValueError('Nœud AST invalide')
+    
+    # Cas d'une feuille (nombre)
+    if node.get('type') == 'number':
+        return {
+            'isLeaf': True,
+            'value': float(node['value'])
+        }
+    
+    # Cas d'une opération
+    if node.get('type') == 'op':
+        return {
+            'isLeaf': False,
+            'op': node['op'],
+            'left': ast_to_eml(node['left']),
+            'right': ast_to_eml(node['right'])
+        }
+    
+    raise ValueError('Nœud AST invalide')
+
 def eval_eml(node):
+    """Évalue une structure EML en effectuant les opérations mathématiques"""
     if not isinstance(node, dict):
         raise ValueError('Nœud EML invalide')
 
+    # Feuille: retourne la valeur
     if node.get('isLeaf'):
         v = node.get('value')
         try:
@@ -78,17 +113,18 @@ def eval_eml(node):
         except Exception:
             raise ValueError('Valeur feuille invalide')
 
+    # Opération: évalue récursivement et applique l'opérateur
     op = node.get('op')
     left = eval_eml(node.get('left'))
     right = eval_eml(node.get('right'))
 
-    if op == 'add':
+    if op == '+':
         return _add(left, right)
-    if op == 'sub':
+    if op == '-':
         return _add(left, neg_1(right))
-    if op == 'mul':
+    if op == '*':
         return _signed(multiply_1, left, right)
-    if op == 'div':
+    if op == '/':
         if abs(right) < 1e-15:
             raise ZeroDivisionError('Division par zéro')
         return _signed(divide_1, left, right)
@@ -98,12 +134,16 @@ def eval_eml(node):
 
 @app.route('/worker', methods=['POST'])
 def calculate():
+    """Endpoint principal: reçoit un AST, le convertit en EML, et l'évalue"""
     data = request.get_json()
-    if not data or 'eml' not in data:
-        return jsonify({'error': 'EML manquant'}), 400
+    if not data or 'ast' not in data:
+        return jsonify({'error': 'AST manquant'}), 400
 
     try:
-        value = eval_eml(data['eml'])
+        # Convertit l'AST JavaScript en structure EML interne
+        eml_tree = ast_to_eml(data['ast'])
+        # Évalue la structure EML (cela appellera eml() via les opérateurs)
+        value = eval_eml(eml_tree)
     except ZeroDivisionError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
