@@ -5,10 +5,10 @@ import os
 
 app = Flask(__name__)
 
+global emlcounter
 emlcounter = 0
 
 def eml(x, y):
-    global emlcounter
     emlcounter += 1
     return math.exp(x) - math.log(y)
 
@@ -105,6 +105,9 @@ def calculate():
     rounded = round(value, 12)
     if rounded == -0.0:
         rounded = 0.0
+
+    print(emlcounter)
+    emlcounter = 0
 
     return jsonify({'result': rounded})
 
