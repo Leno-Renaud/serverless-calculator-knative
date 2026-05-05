@@ -5,12 +5,14 @@ import os
 
 app = Flask(__name__)
 
-global emlcounter
-emlcounter = 0
+_eml_count = 0
+
 
 def eml(x, y):
-    emlcounter += 1
-    return math.exp(x) - math.log(y)
+    global _eml_count
+    _eml_count += 1
+    log_y = float('-inf') if y == 0 else math.log(y)
+    return math.exp(x) - log_y
 
 
 def exp_1(x):
@@ -18,8 +20,6 @@ def exp_1(x):
 
 
 def log_1(x):
-    if x == 0:
-        return float('-inf')
     return eml(1, exp_1(eml(1, x)))
 
 
@@ -44,7 +44,6 @@ def divide_1(x, y):
 
 
 def _signed(fn, a, b):
-    # applique fn sur les valeurs absolues, restaure le signe
     abs_a = a if a > 0 else neg_1(a)
     abs_b = b if b > 0 else neg_1(b)
     result = fn(abs_a, abs_b)
@@ -52,7 +51,6 @@ def _signed(fn, a, b):
 
 
 def _add(a, b):
-    # plus_1 requiert un premier argument >= 0 (domaine de log_1)
     if a >= 0:
         return plus_1(a, b)
     if b >= 0:
@@ -91,6 +89,9 @@ def eval_eml(node):
 
 @app.route('/eml', methods=['POST'])
 def calculate():
+    global _eml_count
+    _eml_count = 0
+
     data = request.get_json()
     if not data or 'eml' not in data:
         return jsonify({'error': 'EML manquant'}), 400
@@ -106,10 +107,7 @@ def calculate():
     if rounded == -0.0:
         rounded = 0.0
 
-    print(emlcounter)
-    emlcounter = 0
-
-    return jsonify({'result': rounded})
+    return jsonify({'result': rounded, 'eml_calls': _eml_count})
 
 
 if __name__ == '__main__':
