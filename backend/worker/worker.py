@@ -89,7 +89,7 @@ def eval_eml(node):
     raise ValueError('Opérateur non supporté')
 
 
-@app.route('/eml', methods=['POST'])
+@app.route('/worker', methods=['POST'])
 def calculate():
     data = request.get_json()
     if not data or 'eml' not in data:
