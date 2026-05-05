@@ -1,8 +1,63 @@
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify
+import math
 import os
 
 app = Flask(__name__)
+
+emlcounter = 0
+
+def eml(x, y):
+    global emlcounter
+    emlcounter += 1
+    return math.exp(x) - math.log(y)
+
+
+def exp_1(x):
+    return eml(x, 1)
+
+
+def log_1(x):
+    if x == 0:
+        return float('-inf')
+    return eml(1, exp_1(eml(1, x)))
+
+
+def minus_1(x, y):
+    return eml(log_1(x), exp_1(y))
+
+
+def neg_1(x):
+    return minus_1(log_1(1), x)
+
+
+def plus_1(x, y):
+    return minus_1(x, neg_1(y))
+
+
+def multiply_1(x, y):
+    return exp_1(plus_1(log_1(x), log_1(y)))
+
+
+def divide_1(x, y):
+    return exp_1(minus_1(log_1(x), log_1(y)))
+
+
+def _signed(fn, a, b):
+    # applique fn sur les valeurs absolues, restaure le signe
+    abs_a = a if a > 0 else neg_1(a)
+    abs_b = b if b > 0 else neg_1(b)
+    result = fn(abs_a, abs_b)
+    return result if (a > 0) == (b > 0) else neg_1(result)
+
+
+def _add(a, b):
+    # plus_1 requiert un premier argument >= 0 (domaine de log_1)
+    if a >= 0:
+        return plus_1(a, b)
+    if b >= 0:
+        return plus_1(b, a)
+    return neg_1(plus_1(neg_1(a), neg_1(b)))
 
 
 def eval_eml(node):
@@ -21,15 +76,15 @@ def eval_eml(node):
     right = eval_eml(node.get('right'))
 
     if op == 'add':
-        return left + right
+        return _add(left, right)
     if op == 'sub':
-        return left - right
+        return _add(left, neg_1(right))
     if op == 'mul':
-        return left * right
+        return _signed(multiply_1, left, right)
     if op == 'div':
         if abs(right) < 1e-15:
             raise ZeroDivisionError('Division par zéro')
-        return left / right
+        return _signed(divide_1, left, right)
 
     raise ValueError('Opérateur non supporté')
 
