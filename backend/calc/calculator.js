@@ -147,7 +147,7 @@ async function runWorker(emlTree) {
   let response;
 
   try {
-    response = await fetch(`${WORKER_URL}/eml`, {
+    response = await fetch(`${WORKER_URL}/worker`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ eml: emlTree }),
