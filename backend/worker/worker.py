@@ -14,6 +14,7 @@ emlcounter = 0
 
 def eml(x, y):
     """Appelle le service EML pour calculer exp(x) - log(y)"""
+    global emlcounter 
     emlcounter += 1
     try:
         response = requests.post(
@@ -135,6 +136,7 @@ def eval_eml(node):
 @app.route('/worker', methods=['POST'])
 def calculate():
     """Endpoint principal: reçoit un AST, le convertit en EML, et l'évalue"""
+    global emlcounter 
     data = request.get_json()
     if not data or 'ast' not in data:
         return jsonify({'error': 'AST manquant'}), 400
@@ -145,16 +147,20 @@ def calculate():
         # Évalue la structure EML (cela appellera eml() via les opérateurs)
         value = eval_eml(eml_tree)
     except ZeroDivisionError as e:
+        emlcounter = 0  
         return jsonify({'error': str(e)}), 400
     except Exception as e:
+        emlcounter = 0  
         return jsonify({'error': str(e)}), 400
 
     rounded = round(value, 12)
     if rounded == -0.0:
         rounded = 0.0
 
-    print(emlcounter)
+    # Enregistrer le compteur avant de le réinitialiser
+    counter_value = emlcounter
     emlcounter = 0
+    print(f"Nombre d'appels EML: {counter_value}")
 
     return jsonify({'result': rounded})
 

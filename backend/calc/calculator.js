@@ -112,19 +112,28 @@ async function runWorker(ast) {
     throw createError(`Worker inaccessible: ${error.message}`, 503);
   }
 
+  // Vérifier le statut HTTP d'abord
+  if (!response.ok) {
+    // Tenter de parser la réponse d'erreur
+    let errorMessage = 'Erreur du worker';
+    try {
+      const errorPayload = await response.json();
+      errorMessage = errorPayload.error || errorMessage;
+    } catch {
+      errorMessage = `Erreur worker (${response.status}): réponse invalide`;
+    }
+    throw createError(errorMessage, response.status);
+  }
+
   let payload;
   try {
     payload = await response.json();
   } catch {
-    throw createError('Réponse worker invalide', 502);
-  }
-
-  if (!response.ok) {
-    throw createError(payload.error || 'Erreur Python', 400);
+    throw createError('Réponse worker invalide (JSON malformé)', 502);
   }
 
   if (typeof payload.result !== 'number') {
-    throw createError('Résultat invalide du worker', 502);
+    throw createError('Résultat invalide du worker (pas un nombre)', 502);
   }
 
   return payload.result;
