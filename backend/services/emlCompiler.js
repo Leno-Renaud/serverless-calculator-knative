@@ -98,7 +98,7 @@ class EMLCompiler {
     const inner = new EMLNode(new EMLNode(this.ONE, x), this.ONE);
     const result = new EMLNode(this.ONE, inner);
     this.cache.set(key, result);
-    return result;
+    return result; //ln(x) = eml(1, eml(eml(1, x), 1))
   }
 
   // e = eml(1, 1)
@@ -133,6 +133,7 @@ class EMLCompiler {
   }
 
   // sub(x, y) = x - y via eml(ln(x), exp(y))
+  // Construction canonique: x - y = exp(ln(x)) - exp(ln(y)) = eml(ln(x), exp(y))
   sub(x, y) {
     const key = `sub_${this._hash(x)}_${this._hash(y)}`;
     if (this.cache.has(key)) return this.cache.get(key);
@@ -145,6 +146,7 @@ class EMLCompiler {
   }
 
   // add(x, y) = x + y = sub(x, neg(y))
+  // Construction canonique: x + y = exp(ln(x)) + exp(ln(y)) = eml(ln(x), exp(y))
 
   // Traitement des constantes pour Mode B strict — construire toute constante via seulement `1` et `eml(...)`.
   add(x, y) {
