@@ -2,12 +2,52 @@
 # 3 services : frontend (Nginx), backend (Node.js), worker (Python)
 # Namespace: calculator
 
+#Eml deployment
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: calculator
 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eml
+  namespace: calculator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eml
+  template:
+    metadata:
+      labels:
+        app: eml
+    spec:
+      containers:
+      - name: eml
+        image: localhost/eml:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 10000
+        env:
+        - name: FLASK_PORT
+          value: "10000"
+
+---
+# Eml Service (ClusterIP - internal only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: eml
+  namespace: calculator
+spec:
+  selector:
+    app: eml
+  ports:
+  - port: 10000
+    targetPort: 10000
+  type: ClusterIP
 ---
 # Worker Deployment
 apiVersion: apps/v1

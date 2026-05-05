@@ -31,6 +31,7 @@ cd /path/to/serverless-calculator
 docker build -t frontend:latest ./Frontend/calculator-interface
 docker build -t backend:latest ./backend/calc
 docker build -t worker:latest ./backend/worker
+docker build -t eml:latest ./backend/eml
 ```
 
 **Important** : Les images doivent être reconstruites après avoir lancé colima, sinon elles sont compilées pour docker-desktop, pas pour k3s.

@@ -23,12 +23,16 @@ cd /path/to/serverless-calculator
 docker build -t frontend:latest ./Frontend/calculator-interface
 docker build -t backend:latest ./backend/calc
 docker build -t worker:latest ./backend/worker
+docker build -t eml:latest ./backend/eml
+
 (podman save localhost/worker:latest -o worker.tar
 podman save localhost/backend:latest -o backend.tar
 podman save localhost/frontend:latest -o frontend.tar
+podman save localhost/eml:latest -o eml.tar
 sudo k3s ctr images import worker.tar
 sudo k3s ctr images import backend.tar
-sudo k3s ctr images import frontend.tar)
+sudo k3s ctr images import frontend.tar
+sudo k3s ctr images import eml.tar)
 ```
 
 ## Étape 3 : Utiliser le descripteur Kubernetes
@@ -36,7 +40,7 @@ sudo k3s ctr images import frontend.tar)
 Le fichier `k3s/kdescriptor-linux.yaml` contient toute la configuration :
 - **Namespace** : `calculator` (isolation logique)
 - **Deployments** : 1 pour chaque service
-- **Services** : 3 services (ClusterIP interne + NodePort frontend)
+- **Services** : 4 services (ClusterIP interne + NodePort frontend)
 
 Le descripteur spécifie aussi :
 - Réplicas : 1 par service (modifiable)
