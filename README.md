@@ -1,6 +1,6 @@
 # Serverless Distributed Calculator
 
-A professional-grade, cloud-native distributed system that demonstrates the power of serverless architecture and advanced mathematical abstraction. This project implements a full-stack calculator where all mathematical operations are derived from a single fundamental function, orchestrated across a multi-tier microservices environment.
+A cloud-native distributed system that demonstrates the power of serverless architecture and advanced mathematical abstraction. This project implements a full-stack calculator where all mathematical operations are derived from a single fundamental function, orchestrated across a multi-tier microservices environment using k.
 
 ## The EML Concept: Mathematical Abstraction
 
@@ -22,7 +22,7 @@ By composing the EML function, we can generate the entire spectrum of arithmetic
 
 ![Architecture](Ressources/architecture.png)
 
-The application is designed as a distributed system, leveraging **K3s** for lightweight Kubernetes orchestration and **Knative** for serverless scaling. The workload is divided into four specialized tiers:
+The application is designed as a distributed system, leveraging **K3s** for lightweight Kubernetes orchestration or **Knative** for serverless scaling. The workload is divided into four specialized tiers:
 
 ### 1. Frontend (React)
 A user interface built with **React** and **Vite**. It provides an intuitive calculator experience, sending arithmetic expressions such as "3+4/2" to the backend orchestrator via a REST API.
@@ -30,10 +30,12 @@ A user interface built with **React** and **Vite**. It provides an intuitive cal
 ![Frontend Interface](Ressources/frontend-interface.png)
 
 ### 2. Backend Orchestrator (Node.js)
-The brain of the system. Built with **Express**, it receives raw expressions, normalizes them, and parses them into an **Abstract Syntax Tree (AST)**. It then orchestrates the evaluation by delegating tasks to the Worker tier.
+The brain of the system. Built with **Express**, it receives raw expressions, normalizes them, and parses them into an **Abstract Syntax Tree (AST)**. It then orchestrates the evaluation by delegating tasks (simple mathematical operations like +,-,*,/) to the Worker tier.
 
 ### 3. Worker Service (Python)
-A specialized python **Flask** service that processes the AST. It traverses the tree and identifies the required mathematical operations (+,-,/,*), delegating the fundamental calculations to the EML service. A simple operation launches multiple EML calls (deliberately not optimal to display kubernetes capabilities).
+A specialized python **Flask** service that processes the AST. It traverses the tree and identifies the required mathematical operations (+,-,/,*) and the EML operations to execute.
+![Math Operations Examples](Ressources/math-operations.png) 
+Delegating the fundamental calculations to the EML service. A simple operation launches multiple EML calls (deliberately not optimal to display kubernetes capabilities).
 ![Worker.py](Ressources/worker-python.png)
 
 ### 4. EML Core Service (Python)
@@ -45,11 +47,11 @@ The high-performance core that implements the fundamental EML function. This ser
 
 - **`Frontend/`**: React application and UI components.
 - **`backend/`**: Contains the Node.js orchestrator (`calc/`), the Python evaluation worker (`worker/`), and the core EML service (`eml/`).
-- **`k3s/`**: Kubernetes manifests and configurations for local and production-like clusters.
+- **`k3s/`**: Kubernetes manifests (.yaml) and configurations for local and production-like clusters.
 - **`knative/`**: Serverless service definitions and autoscaling configurations for Knative.
-- **`automation/`**: Shell scripts for automated deployment and environment setup.
+- **`automation/`**: Shell scripts for automated deployment via standard k3s or knative and environment setup on macOS and linux.
 - **`documentation/`**: Detailed technical deep-dives into the architecture, mathematics, and deployment strategies.
-- **`Ressources/`**: Visual assets and documentation diagrams.
+- **`Ressources/`**: Visual assets and documentation diagrams used in this README.
 
 ---
 
