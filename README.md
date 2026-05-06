@@ -34,7 +34,9 @@ The brain of the system. Built with **Express**, it receives raw expressions, no
 
 ### 3. Worker Service (Python)
 A specialized python **Flask** service that processes the AST. It traverses the tree and identifies the required mathematical operations (+,-,/,*) and the EML operations to execute.
+
 ![Math Operations Examples](Ressources/math-operations.png) 
+
 Delegating the fundamental calculations to the EML service. A simple operation launches multiple EML calls (deliberately not optimal to display kubernetes capabilities).
 ![Worker.py](Ressources/worker-python.png)
 
