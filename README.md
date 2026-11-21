@@ -1,6 +1,6 @@
 # Serverless Distributed Calculator
 
-A cloud-native distributed system that demonstrates the power of serverless architecture and advanced mathematical abstraction. This project implements a full-stack calculator where all mathematical operations are derived from a single fundamental function, orchestrated across a multi-tier microservices environment using k.
+A cloud-native distributed system that demonstrates the power of serverless architecture and advanced mathematical abstraction. This project implements a full-stack calculator where all mathematical operations are derived from a single fundamental function, orchestrated across a multi-tier microservices environment using knative.
 
 ## The EML Concept: Mathematical Abstraction
 
